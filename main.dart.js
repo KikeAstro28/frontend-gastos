@@ -46138,7 +46138,7 @@ return A.N($async$zH,r)},
 zu(a){return this.ak3(a)},
 ak3(a){var s=0,r=A.O(t.Hq),q,p,o,n,m,l
 var $async$zu=A.J(function(b,c){if(b===1)return A.L(c,r)
-for(;;)switch(s){case 0:o=A.dq("http://127.0.0.1:8000/parse/text")
+for(;;)switch(s){case 0:o=A.dq("https://backend-gastos-g560.onrender.com/parse/text")
 n=t.N
 m=A.al(["Content-Type","application/json"],n,n)
 s=3
