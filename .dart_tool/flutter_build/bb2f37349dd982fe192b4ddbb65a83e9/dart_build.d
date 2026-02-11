@@ -1,1 +1,0 @@
- C:\\Users\\kinos\\Desktop\\app_gastos\\.dart_tool\\flutter_build\\bb2f37349dd982fe192b4ddbb65a83e9\\dart_build_result.json:  C:\\Users\\kinos\\Desktop\\app_gastos\\.dart_tool\\package_config.json C:\\Users\\kinos\\Desktop\\app_gastos\\pubspec.yaml C:\\Users\\kinos\\flutter\\bin\\cache\\dart-sdk\\version c:\\users\\kinos\\desktop\\app_gastos\\.dart_tool\\package_config.json
