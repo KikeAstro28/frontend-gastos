@@ -14,6 +14,12 @@ import 'categories_page.dart';
 import 'expenses_list_page.dart';
 import 'pages/account_page.dart';
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:file_picker/file_picker.dart';
+
+import '../services/api_config.dart';
+import '../services/auth_service.dart';
 
 
 
@@ -1176,13 +1182,25 @@ class _AddExpenseAIPageState extends State<AddExpenseAIPage> {
   // ================================
   // FOTO: enviar archivo al backend
   // ================================
+
   Future<List<ParsedExpense>> _sendFileToBackend({
     required String endpoint,
     required PlatformFile file,
   }) async {
-    final uri = Uri.parse('$BASE_URL$endpoint');
+    final uri = Uri.parse('$baseUrl$endpoint');
     final req = http.MultipartRequest('POST', uri);
 
+    // Token
+    final token = await AuthService.getToken();
+    if (token != null && token.isNotEmpty) {
+      req.headers['Authorization'] = 'Bearer $token';
+    }
+
+    // (Opcional) debug para ver en consola
+    print("UPLOAD URL => $uri");
+    print("UPLOAD HEADERS => ${req.headers}");
+
+    // Archivo
     if (file.bytes != null) {
       req.files.add(http.MultipartFile.fromBytes(
         'file',
@@ -1206,6 +1224,7 @@ class _AddExpenseAIPageState extends State<AddExpenseAIPage> {
     final items = (json['items'] as List).cast<Map<String, dynamic>>();
     return items.map(ParsedExpense.fromJson).toList();
   }
+
 
   Future<void> _pickAndParseImage() async {
     setState(() {
