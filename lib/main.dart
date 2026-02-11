@@ -1076,7 +1076,6 @@ class _StatsPageState extends State<StatsPage> {
 
 
 // CAMBIA esto cuando montes tu backend:
-const String BASE_URL = 'http://127.0.0.1:8000';
 
 class ParsedExpense {
   DateTime date;
@@ -1320,7 +1319,7 @@ class _AddExpenseAIPageState extends State<AddExpenseAIPage> {
   // Enviar texto dictado al backend
   // ================================
   Future<List<ParsedExpense>> _sendTextToBackend(String text) async {
-    final uri = Uri.parse('$BASE_URL/parse/text');
+    final uri = Uri.parse('$baseUrl/parse/text');
     final resp = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
