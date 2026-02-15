@@ -1169,6 +1169,18 @@ class AddExpenseAIPage extends StatefulWidget {
 }
 
 class _AddExpenseAIPageState extends State<AddExpenseAIPage> {
+  static const List<String> _defaultCategories = [
+  'Desayuno/Fuera',
+  'Compra/Supermercado',
+  'Alcohol/Cervezas',
+  'Regalos',
+  'Transporte',
+  'Ropa/Complementos',
+  'Suscripciones',
+  'Tabaco',
+];
+
+  
   bool _loading = false;
   String? _error;
 
@@ -1226,50 +1238,64 @@ class _AddExpenseAIPageState extends State<AddExpenseAIPage> {
 
 
   Future<void> _pickAndParseImage() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  setState(() {
+    _loading = true;
+    _error = null;
+  });
 
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        withData: true,
-      );
+  try {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: true,
+    );
 
-      if (result == null || result.files.isEmpty) {
-        setState(() => _loading = false);
-        return;
-      }
-
-      final file = result.files.first;
-
-      final parsed = await _sendFileToBackend(
-        endpoint: '/parse/image',
-        file: file,
-      );
-
+    if (result == null || result.files.isEmpty) {
       if (!mounted) return;
-
-      final confirmed = await Navigator.push<List<Expense>>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ReviewExpensesPage(
-            categories: widget.categories,
-            parsed: parsed,
-          ),
-        ),
-      );
-
-      if (confirmed != null && mounted) {
-        Navigator.pop(context, confirmed);
-      }
-    } catch (e) {
-      setState(() => _error = e.toString());
-    } finally {
       setState(() => _loading = false);
+      return;
     }
+
+    final file = result.files.first;
+
+    // ✅ AQUÍ faltaba esto:
+    final parsed = await _sendFileToBackend(
+      endpoint: '/parse/image',
+      file: file,
+    );
+
+    if (!mounted) return;
+
+    if (parsed.isEmpty) {
+      setState(() {
+        _error =
+            'No se detectaron gastos en la imagen. Prueba con otra foto (más nítida) o recorta la zona de importes.';
+      });
+      return;
+    }
+
+    final confirmed = await Navigator.push<List<Expense>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ReviewExpensesPage(
+          categories: widget.categories.isNotEmpty
+              ? widget.categories
+              : _defaultCategories, // esto lo arreglamos abajo
+          parsed: parsed,
+        ),
+      ),
+    );
+
+    if (confirmed != null && mounted) {
+      Navigator.pop(context, confirmed);
+    }
+  } catch (e) {
+    if (!mounted) return;
+    setState(() => _error = e.toString());
+  } finally {
+    if (!mounted) return;
+    setState(() => _loading = false);
   }
+}
 
   // ================================
   // AUDIO: dictado real (voz -> texto)
@@ -1320,11 +1346,21 @@ class _AddExpenseAIPageState extends State<AddExpenseAIPage> {
   // ================================
   Future<List<ParsedExpense>> _sendTextToBackend(String text) async {
     final uri = Uri.parse('$baseUrl/parse/text');
-    final resp = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'text': text}),
-    );
+    final token = await AuthService.getToken();
+
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+final resp = await http.post(
+  uri,
+  headers: headers,
+  body: jsonEncode({'text': text}),
+);
+
 
     if (resp.statusCode != 200) {
       throw Exception('Backend error ${resp.statusCode}: ${resp.body}');
@@ -1559,7 +1595,7 @@ void initState() {
         child: FilledButton.icon(
           icon: const Icon(Icons.check),
           label: const Text('Confirmar y guardar'),
-          onPressed: _confirm,
+          onPressed: items.isEmpty ? null : _confirm,
         ),
       ),
     );
