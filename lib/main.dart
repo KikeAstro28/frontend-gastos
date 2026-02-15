@@ -1523,81 +1523,121 @@ void initState() {
     Navigator.pop(context, result);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Revisar antes de guardar'),
+@override
+Widget build(BuildContext context) {
+  final safeCategories = widget.categories.isNotEmpty
+    ? widget.categories
+    : [
+        'Desayuno/Fuera',
+        'Compra/Supermercado',
+        'Alcohol/Cervezas',
+        'Regalos',
+        'Transporte',
+        'Ropa/Complementos',
+        'Suscripciones',
+        'Tabaco',
+      ];
+
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Revisar antes de guardar'),
+    ),
+    body: ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: items.length,
+      separatorBuilder: (_, __) => const Divider(height: 24),
+      itemBuilder: (context, i) {
+        final e = items[i];
+
+        // ✅ AÑADIDO: texto de fecha bonito
+        final dateText =
+            '${e.date.day.toString().padLeft(2, '0')}/'
+            '${e.date.month.toString().padLeft(2, '0')}/'
+            '${e.date.year}';
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Confianza: ${(e.confidence * 100).toStringAsFixed(0)}%',
+              style: const TextStyle(color: Colors.black54),
+            ),
+            const SizedBox(height: 8),
+
+            // ✅ AÑADIDO: botón para ver/cambiar fecha
+            OutlinedButton.icon(
+              onPressed: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: e.date,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                );
+                if (picked != null) {
+                  setState(() => e.date = picked);
+                }
+              },
+              icon: const Icon(Icons.calendar_today),
+              label: Text('Fecha: $dateText'),
+            ),
+            const SizedBox(height: 10),
+
+            TextFormField(
+              initialValue: e.description,
+              decoration: const InputDecoration(
+                labelText: 'Descripción',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (v) => e.description = v,
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              initialValue: e.amount.toStringAsFixed(2),
+              decoration: const InputDecoration(
+                labelText: 'Monto (€)',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (v) {
+                final parsed = double.tryParse(v.replaceAll(',', '.'));
+                if (parsed != null) e.amount = parsed;
+              },
+            ),
+            const SizedBox(height: 10),
+            DropdownButtonFormField<String>(
+              value: safeCategories.contains(e.category)
+                  ? e.category
+                  : safeCategories.first,
+
+              items: safeCategories
+                  .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                  .toList(),
+              onChanged: (v) => setState(() => e.category = v ?? e.category),
+              decoration: const InputDecoration(
+                labelText: 'Categoría',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              initialValue: e.extra,
+              decoration: const InputDecoration(
+                labelText: 'Extra (opcional)',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (v) => e.extra = v,
+            ),
+          ],
+        );
+      },
+    ),
+    bottomNavigationBar: Padding(
+      padding: const EdgeInsets.all(16),
+      child: FilledButton.icon(
+        icon: const Icon(Icons.check),
+        label: const Text('Confirmar y guardar'),
+        onPressed: items.isEmpty ? null : _confirm,
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const Divider(height: 24),
-        itemBuilder: (context, i) {
-          final e = items[i];
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Confianza: ${(e.confidence * 100).toStringAsFixed(0)}%',
-                style: const TextStyle(color: Colors.black54),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                initialValue: e.description,
-                decoration: const InputDecoration(
-                  labelText: 'Descripción',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (v) => e.description = v,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                initialValue: e.amount.toStringAsFixed(2),
-                decoration: const InputDecoration(
-                  labelText: 'Monto (€)',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (v) {
-                  final parsed = double.tryParse(v.replaceAll(',', '.'));
-                  if (parsed != null) e.amount = parsed;
-                },
-              ),
-              const SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                value: widget.categories.contains(e.category)
-                    ? e.category
-                    : widget.categories.first,
-                items: widget.categories
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                    .toList(),
-                onChanged: (v) => setState(() => e.category = v ?? e.category),
-                decoration: const InputDecoration(
-                  labelText: 'Categoría',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                initialValue: e.extra,
-                decoration: const InputDecoration(
-                  labelText: 'Extra (opcional)',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (v) => e.extra = v,
-              ),
-            ],
-          );
-        },
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: FilledButton.icon(
-          icon: const Icon(Icons.check),
-          label: const Text('Confirmar y guardar'),
-          onPressed: items.isEmpty ? null : _confirm,
-        ),
-      ),
-    );
-  }
+    ),
+  );
+}
 }
