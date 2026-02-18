@@ -21,6 +21,7 @@ import 'package:file_picker/file_picker.dart';
 import '../services/api_config.dart';
 import '../services/auth_service.dart';
 
+import 'utils/mic_permission.dart';
 
 
 void main() => runApp(const GastosApp());
@@ -1310,31 +1311,43 @@ class _AddExpenseAIPageState extends State<AddExpenseAIPage> {
     }
   }
 
-  Future<void> _startDictation() async {
+Future<void> _startDictation() async {
+  setState(() {
+    _error = null;
+    _dictatedText = '';
+    _listening = true;
+  });
+
+  try {
+    // 👇 clave en WEB: fuerza el popup de micro
+    await ensureMicPermission();
+  } catch (e) {
     setState(() {
-      _error = null;
-      _dictatedText = '';
-      _listening = true;
+      _error = 'No se pudo iniciar el dictado (permiso micrófono?).';
+      _listening = false;
     });
-
-    if (!_speechReady) {
-      await _initSpeech();
-      if (!_speechReady) {
-        setState(() => _listening = false);
-        return;
-      }
-    }
-
-    await _speech.listen(
-      localeId: 'es-ES',
-      listenMode: stt.ListenMode.dictation,
-      onResult: (result) {
-        setState(() {
-          _dictatedText = result.recognizedWords;
-        });
-      },
-    );
+    return;
   }
+
+  if (!_speechReady) {
+    await _initSpeech();
+    if (!_speechReady) {
+      setState(() => _listening = false);
+      return;
+    }
+  }
+
+  await _speech.listen(
+    localeId: 'es-ES',
+    listenMode: stt.ListenMode.dictation,
+    onResult: (result) {
+      setState(() {
+        _dictatedText = result.recognizedWords;
+      });
+    },
+  );
+}
+
 
   Future<void> _stopDictation() async {
     await _speech.stop();
@@ -1406,6 +1419,8 @@ final resp = await http.post(
       setState(() => _loading = false);
     }
   }
+
+
 
   // ================================
   // UI
