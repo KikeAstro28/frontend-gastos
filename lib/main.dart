@@ -1524,19 +1524,20 @@ void initState() {
   }
 
 @override
+@override
 Widget build(BuildContext context) {
   final safeCategories = widget.categories.isNotEmpty
-    ? widget.categories
-    : [
-        'Desayuno/Fuera',
-        'Compra/Supermercado',
-        'Alcohol/Cervezas',
-        'Regalos',
-        'Transporte',
-        'Ropa/Complementos',
-        'Suscripciones',
-        'Tabaco',
-      ];
+      ? widget.categories
+      : const [
+          'Desayuno/Fuera',
+          'Compra/Supermercado',
+          'Alcohol/Cervezas',
+          'Regalos',
+          'Transporte',
+          'Ropa/Complementos',
+          'Suscripciones',
+          'Tabaco',
+        ];
 
   return Scaffold(
     appBar: AppBar(
@@ -1549,7 +1550,7 @@ Widget build(BuildContext context) {
       itemBuilder: (context, i) {
         final e = items[i];
 
-        // ✅ AÑADIDO: texto de fecha bonito
+        // ✅ texto de fecha bonito (por item)
         final dateText =
             '${e.date.day.toString().padLeft(2, '0')}/'
             '${e.date.month.toString().padLeft(2, '0')}/'
@@ -1564,7 +1565,7 @@ Widget build(BuildContext context) {
             ),
             const SizedBox(height: 8),
 
-            // ✅ AÑADIDO: botón para ver/cambiar fecha
+            // ✅ botón para ver/cambiar fecha
             OutlinedButton.icon(
               onPressed: () async {
                 final picked = await showDatePicker(
@@ -1591,6 +1592,7 @@ Widget build(BuildContext context) {
               onChanged: (v) => e.description = v,
             ),
             const SizedBox(height: 10),
+
             TextFormField(
               initialValue: e.amount.toStringAsFixed(2),
               decoration: const InputDecoration(
@@ -1603,11 +1605,11 @@ Widget build(BuildContext context) {
               },
             ),
             const SizedBox(height: 10),
+
             DropdownButtonFormField<String>(
               value: safeCategories.contains(e.category)
                   ? e.category
                   : safeCategories.first,
-
               items: safeCategories
                   .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                   .toList(),
@@ -1618,6 +1620,7 @@ Widget build(BuildContext context) {
               ),
             ),
             const SizedBox(height: 10),
+
             TextFormField(
               initialValue: e.extra,
               decoration: const InputDecoration(
